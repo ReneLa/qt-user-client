@@ -3,14 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { useDispatch, useSelector } from "react-redux";
+import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle
@@ -20,12 +19,23 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
-  FormMessage
+  FormLabel
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
-import { onOpen, onClose } from "@/redux/modal/modal.slice";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+import { onClose } from "@/redux/modal/modal.slice";
 import { DatePickerWithRange } from "../date-picker";
 
 const formSchema = z.object({
@@ -114,6 +124,22 @@ export const CreateTaskModal = () => {
 
               <div className="flex flex-col space-y-2 ">Assignee</div>
 
+              <div className="flex flex-col space-y-2 ">
+                Project
+                <Select>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select a project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Fruits</SelectLabel>
+                      <SelectItem value="apple">QT User module</SelectItem>
+                      <SelectItem value="banana">QT Task module </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <FormField
                 control={form.control}
                 name="description"
@@ -129,6 +155,24 @@ export const CreateTaskModal = () => {
                   </FormItem>
                 )}
               />
+
+              <div className="flex flex-col space-y-2 ">
+                Priority
+                <RadioGroup defaultValue="comfortable">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="default" id="r1" />
+                    <Label htmlFor="r1">Default</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="comfortable" id="r2" />
+                    <Label htmlFor="r2">Comfortable</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="compact" id="r3" />
+                    <Label htmlFor="r3">Compact</Label>
+                  </div>
+                </RadioGroup>
+              </div>
             </div>
             <DialogFooter className="px-6 py-4">
               <Button variant="primary" disabled={isLoading}>
