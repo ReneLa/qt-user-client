@@ -158,7 +158,10 @@ export const CreateTaskModal = () => {
 
               <div className="flex flex-col space-y-2 ">
                 Priority
-                <RadioGroup defaultValue="comfortable">
+                <RadioGroup
+                  defaultValue="comfortable"
+                  className="flex flex-row items-center mt-2"
+                >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="default" id="r1" />
                     <Label htmlFor="r1">Default</Label>
