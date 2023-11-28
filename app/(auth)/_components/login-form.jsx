@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLoginUserMutation } from "@/redux/user/user.slice";
+import { Spinner } from "@/components/spinner";
 
 const FormSchema = z.object({
   email: z.string().min(2, {
@@ -30,9 +31,8 @@ const FormSchema = z.object({
 
 const LoginForm = () => {
   const router = useRouter();
-  const [loginUser, { data, isError, isSuccess }] = useLoginUserMutation();
-
-  const [isFetching, setFetching] = useState(false);
+  const [loginUser, { data, isError, error, isSuccess, isLoading }] =
+    useLoginUserMutation();
 
   const form = useForm({
     resolver: zodResolver(FormSchema),
@@ -45,18 +45,16 @@ const LoginForm = () => {
   useEffect(() => {
     if (data && isSuccess) {
       router.replace("/tasks");
+      toast.success("Successful login");
     }
-  }, [data, isSuccess, router]);
+    if (isError && error) {
+      const { message } = error.data;
+      toast.error(message);
+    }
+  }, [data, isSuccess, isError, error, router]);
 
   const onSubmit = async (data) => {
-    setFetching(true);
-    setTimeout(() => {
-      toast.success("Successful login");
-      router.push("/projects");
-      setFetching(false);
-    }, 3000);
-
-    // await loginUser(data).unwrap();
+    await loginUser(data).unwrap();
   };
 
   return (
@@ -105,11 +103,14 @@ const LoginForm = () => {
           </div>
         </div>
         <Button
-          disabled={isFetching}
+          disabled={isLoading}
           type="submit"
-          className={cn("w-full py-4 text-white", isFetching && "opacity-8")}
+          className={cn(
+            "w-full py-4 text-white",
+            isLoading && "bg-[#0f6fec]/50"
+          )}
         >
-          {isFetching ? "authenticating..." : "Login"}
+          {isLoading ? <Spinner size="sm" /> : "Login"}
         </Button>
       </form>
     </Form>
