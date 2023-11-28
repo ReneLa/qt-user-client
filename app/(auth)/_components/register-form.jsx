@@ -20,25 +20,29 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useRegisterUserMutation } from "@/redux/user/user.slice";
+import { Spinner } from "@/components/spinner";
 
-const FormSchema = z.object({
-  email: z.string().min(2, {
-    message: "Username must be at least 2 characters."
-  }),
-  password: z.string().min(6, {
-    message: "Password must be at least 6 characters."
-  }),
-  confirm_password: z.string().min(6, {
-    message: "Password must be at least 6 characters."
+const FormSchema = z
+  .object({
+    email: z.string().min(2, {
+      message: "Username must be at least 2 characters."
+    }),
+    password: z.string().min(6, {
+      message: "Password must be at least 6 characters."
+    }),
+    confirm_password: z.string().min(6, {
+      message: "Confirm Password must be at least 6 characters."
+    })
   })
-});
+  .refine((data) => data.password === data.confirm_password, {
+    message: "Passwords don't match",
+    path: ["confirm_password"]
+  });
 
 const RegisterForm = () => {
   const router = useRouter();
-  const [registerUser, { data, isError, isSuccess }] =
+  const [registerUser, { data, isSuccess, isError, error, isLoading }] =
     useRegisterUserMutation();
-
-  const [isFetching, setFetching] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(FormSchema),
@@ -52,18 +56,17 @@ const RegisterForm = () => {
   useEffect(() => {
     if (data && isSuccess) {
       router.replace("/profile");
+      toast.success("Successful registered");
     }
-  }, [data, isSuccess, router]);
+    if (isError && error) {
+      const { message } = error.data;
+      toast.error(message);
+    }
+  }, [data, isSuccess, isError, error, router]);
 
   const onSubmit = async (data) => {
-    setFetching(true);
-    setTimeout(() => {
-      toast.success("Successful registered");
-      router.push("/profile");
-      setFetching(false);
-    }, 3000);
-
-    // await registerUser(data).unwrap();
+    console.log(data);
+    await registerUser(data).unwrap();
   };
 
   return (
@@ -120,11 +123,14 @@ const RegisterForm = () => {
           )}
         />
         <Button
-          disabled={isFetching}
+          disabled={isLoading}
           type="submit"
-          className={cn("w-full py-4 text-white", isFetching && "opacity-8")}
+          className={cn(
+            "w-full py-4 text-white",
+            isLoading && "bg-[#0f6fec]/50"
+          )}
         >
-          {isFetching ? "creating..." : "Register"}
+          {isLoading ? <Spinner size="sm" /> : "Register"}
         </Button>
       </form>
     </Form>

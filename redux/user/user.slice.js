@@ -10,14 +10,10 @@ export const userSlice = apiSlice.injectEndpoints({
       })
     }),
     registerUser: builder.mutation({
-      query: (user) => ({
-        url: "/register",
+      query: (credentials) => ({
+        url: "/signup",
         method: "POST",
-        body: {
-          email: user.email,
-          password: user.password,
-          confirm_password: user.confirm_password
-        }
+        body: { ...credentials }
       })
     }),
     resetPassword: builder.mutation({
