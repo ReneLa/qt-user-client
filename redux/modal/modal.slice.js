@@ -13,12 +13,12 @@ const modalStore = createSlice({
     onOpen: (state, { payload }) => {
       state.isOpen = true;
       state.type = payload.type;
-      state.date = payload.data;
+      state.data = payload.data;
     },
     onClose: (state, action) => {
       state.isOpen = false;
       state.type = null;
-      state.date = null;
+      state.data = null;
     }
   }
 });

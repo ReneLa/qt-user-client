@@ -65,7 +65,6 @@ const RegisterForm = () => {
   }, [data, isSuccess, isError, error, router]);
 
   const onSubmit = async (data) => {
-    console.log(data);
     await registerUser(data).unwrap();
   };
 

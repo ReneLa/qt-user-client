@@ -1,8 +1,12 @@
+/* eslint-disable react/jsx-key */
 "use client";
 
 import Image from "next/image";
+import { useEffect } from "react";
 
 import { Separator } from "@/components/ui/separator";
+import { useGetTasksQuery } from "@/redux/task/task.slice";
+import { Spinner } from "@/components/spinner";
 
 const TASKS = [
   {
@@ -14,23 +18,23 @@ const TASKS = [
       {
         id: "2",
         name: "Rene La",
-        title: "Developer",
+        title: "Developer"
       },
       {
         id: "3",
         name: "Rene La",
-        title: "Developer",
+        title: "Developer"
       },
       {
         id: "3",
         name: "Rene La",
-        title: "Developer",
-      },
+        title: "Developer"
+      }
     ],
     project: {
-      title: "QT user Module",
+      title: "QT user Module"
     },
-    description: "Lorem ipsum ipsumnsdas sdasd",
+    description: "Lorem ipsum ipsumnsdas sdasd"
   },
   {
     id: "3",
@@ -41,23 +45,23 @@ const TASKS = [
       {
         id: "2",
         name: "Rene La",
-        title: "Developer",
+        title: "Developer"
       },
       {
         id: "3",
         name: "Rene La",
-        title: "Developer",
+        title: "Developer"
       },
       {
         id: "3",
         name: "Rene La",
-        title: "Developer",
-      },
+        title: "Developer"
+      }
     ],
     project: {
-      title: "QT user Module",
+      title: "QT user Module"
     },
-    description: "Lorem ipsum ipsumnsdas sdasd",
+    description: "Lorem ipsum ipsumnsdas sdasd"
   },
   {
     id: "3",
@@ -68,29 +72,47 @@ const TASKS = [
       {
         id: "2",
         name: "Rene La",
-        title: "Developer",
+        title: "Developer"
       },
       {
         id: "3",
         name: "Rene La",
-        title: "Developer",
+        title: "Developer"
       },
       {
         id: "3",
         name: "Rene La",
-        title: "Developer",
-      },
+        title: "Developer"
+      }
     ],
     project: {
-      title: "QT user Module",
+      title: "QT user Module"
     },
-    description: "Lorem ipsum ipsumnsdas sdasd",
-  },
+    description: "Lorem ipsum ipsumnsdas sdasd"
+  }
 ];
 const TaskList = () => {
+  const { data, isLoading } = useGetTasksQuery();
+
+  useEffect(() => {
+    if (data) {
+      console.log(data);
+    }
+  }, [data]);
+
   return (
     <div className="mt-2 grid grid-cols-3 gap-4">
-      {TASKS.map((task) => (
+      {isLoading && (
+        <div className="w-full h-full bg-[rgb(20,21,25)] max-h-1/2 flex flex-col border shadow-sm rounded-xl space-y-4 pb-2 items-center justify-center">
+          <Spinner size="md" />
+        </div>
+      )}
+      {!isLoading && data?.length === 0 && (
+        <div className="w-full h-ful bg-[rgb(20,21,25)] max-h-1/2 flex flex-col border shadow-sm rounded-xl space-y-4 pb-2 items-center justify-center">
+          Create task
+        </div>
+      )}
+      {data?.tasks?.map((task) => (
         <div className="w-full bg-[rgb(20,21,25)] max-h-1/2 flex flex-col border shadow-sm rounded-xl space-y-4 pb-2">
           <div className="relative  w-full h-[60px]">
             <div className="absolute flex  -bottom-8 w-full left-0 right-0 z-10 items-center justify-center">

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   Form,
@@ -17,7 +18,10 @@ import { Input } from "@/components/ui/input";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useModifyUserMutation } from "@/redux/user/user.slice";
+import {
+  updateCurrentUser,
+  useModifyUserMutation
+} from "@/redux/user/user.slice";
 
 const FormSchema = z.object({
   first_name: z.string().min(2, {
@@ -36,9 +40,10 @@ const FormSchema = z.object({
 
 const ProfileForms = () => {
   const router = useRouter();
-  const [modifyUser, { data, isError, isSuccess }] = useModifyUserMutation();
-
-  const [isSaving, setSaving] = useState(false);
+  const dispatch = useDispatch();
+  const { user } = useSelector(({ User }) => User);
+  const [modifyUser, { data, isSuccess, isError, error, isLoading }] =
+    useModifyUserMutation();
 
   const form = useForm({
     resolver: zodResolver(FormSchema),
@@ -52,19 +57,21 @@ const ProfileForms = () => {
 
   useEffect(() => {
     if (data && isSuccess) {
-      router.replace("/profile");
+      const values = form.getValues();
+      //populate user state in the store with updated data
+      dispatch(updateCurrentUser({...user,...values}));
+
+      toast.success("Changes Saved");
+      router.push("/tasks");
+      form.reset();
     }
-  }, [data, isSuccess, router]);
+    if (isError && error) {
+      toast.error("Changes not saved");
+    }
+  }, [data, isSuccess, isError, error, router, form, dispatch]);
 
   const onSubmit = async (data) => {
-    setSaving(true);
-    setTimeout(() => {
-      toast.success("Changes Saved");
-      router.push("/profile");
-      setSaving(false);
-    }, 3000);
-
-    // await modifyUser(data).unwrap();
+    await modifyUser(data);
   };
 
   return (
@@ -115,7 +122,7 @@ const ProfileForms = () => {
 
         <div className="flex items-center space-x-4">
           <FormField
-            control={form.control}
+            disabled
             name="email"
             render={({ field }) => (
               <FormItem>
@@ -123,9 +130,9 @@ const ProfileForms = () => {
                 <FormControl>
                   <Input
                     type="email"
-                    placeholder="renela79@gmail.com"
+                    defaultValues={user?.email}
                     disabled
-                    {...field}
+                   value={user?.email}
                   />
                 </FormControl>
               </FormItem>
@@ -147,11 +154,11 @@ const ProfileForms = () => {
 
         <div className="flex items-center justify-end">
           <Button
-            disabled={isSaving}
+            disabled={isLoading}
             type="submit"
-            className={cn("w-1/4  py-4 text-white", isSaving && "opacity-8")}
+            className={cn("w-1/4  py-4 text-white", isLoading && "opacity-8")}
           >
-            {isSaving ? "saving..." : "Save Changes"}
+            {isLoading ? "saving..." : "Save Changes"}
           </Button>
         </div>
       </form>

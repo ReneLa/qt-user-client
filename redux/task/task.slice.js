@@ -4,7 +4,7 @@ export const taskSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getTasks: builder.query({
       query: () => ({
-        url: `/`,
+        url: `/api/tasks`,
         method: "GET"
       })
     }),

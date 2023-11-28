@@ -1,7 +1,25 @@
+"use client";
+
+import { useSelector } from "react-redux";
+import { redirect } from "next/navigation";
+
 import Header from "./_components/header";
 import UserInfo from "./_components/user-info";
+import { useGetAssigneesQuery } from "@/redux/user/user.slice";
+import { useGetProjectsQuery } from "@/redux/project/project.slice";
 
 const MainLayout = ({ children }) => {
+  const { token } = useSelector(({ User }) => User);
+
+  //prefetch assignees and projects
+
+  useGetAssigneesQuery();
+  useGetProjectsQuery();
+
+  if (!token) {
+    return redirect("/");
+  }
+
   return (
     <div className="w-full h-full flex flex-col items-center">
       <Header />

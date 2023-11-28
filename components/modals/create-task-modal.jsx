@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,7 @@ import {
   FormLabel
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -31,12 +33,12 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import { onClose } from "@/redux/modal/modal.slice";
 import { DatePickerWithRange } from "../date-picker";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   name: z.string().min(1, {
@@ -57,7 +59,7 @@ const formSchema = z.object({
 });
 
 export const CreateTaskModal = () => {
-  const { isOpen, type } = useSelector(({ Modal }) => Modal);
+  const { isOpen, type, data: modalData } = useSelector(({ Modal }) => Modal);
   const router = useRouter();
   const dispatch = useDispatch();
 
@@ -74,18 +76,20 @@ export const CreateTaskModal = () => {
     }
   });
 
+  const [selectedAssignees, setSetSelectedAssignees] = useState([]);
+
   //destruct to know when form is submitting
   const isLoading = form.formState.isSubmitting;
 
   const onSubmit = async (values) => {
     try {
-      form.reset();
-      router.refresh();
-      dispatch(onClose());
+      console.log(values);
+      // form.reset();
+      // router.refresh();
+      // dispatch(onClose());
     } catch (error) {
       console.log(error);
     }
-    console.log(values);
   };
 
   const handleClose = () => {
@@ -93,6 +97,56 @@ export const CreateTaskModal = () => {
     dispatch(onClose());
   };
 
+  const handleSelectAssignee = (id) => {
+    const existAssignee = selectedAssignees?.find(
+      (assignee) => assignee === id
+    );
+
+    console.log(existAssignee, "assignee");
+    if (!existAssignee) {
+      setSetSelectedAssignees({ ...selectedAssignees, id });
+    } else {
+    }
+  };
+
+  // const isSelected = (id) => {
+  //   const existAssignee = selectedAssignees?.find(
+  //     (assignee) => assignee === id
+  //   );
+  //   if (existAssignee) {
+  //     return true;
+  //   } else {
+  //     return false;
+  //   }
+  // };
+
+  const renderAssignees = () => {
+    return modalData?.assignees?.map((assignee) => {
+      return (
+        <div
+          role="button"
+          onClick={() => handleSelectAssignee(assignee.id)}
+          className={cn(
+            "flex items-center justify-center py-1 px-2 rounded-md border cursor-pointer hover:bg-neutral-100/30 hover:shadow-lg"
+            // isSelected(assignee.id) && "bg-[red]"
+          )}
+          key={assignee.id}
+          style={{
+            marginLeft: "5px",
+            "&:hover": {
+              "> button": {
+                display: "flex"
+              }
+            }
+          }}
+        >
+          <p className="text-[12px] text-white font-regular">
+            {assignee.first_name}
+          </p>
+        </div>
+      );
+    });
+  };
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
       <DialogContent className="bg-[#191a1f] p-0 overflow-hidden">
@@ -122,7 +176,12 @@ export const CreateTaskModal = () => {
                 <DatePickerWithRange />
               </div>
 
-              <div className="flex flex-col space-y-2 ">Assignee</div>
+              <div className="flex flex-col space-y-2 ">
+                Assignee
+                <div className="flex flex-wrap items-center py-2 space-x-2">
+                  {renderAssignees()}
+                </div>
+              </div>
 
               <div className="flex flex-col space-y-2 ">
                 Project
@@ -132,9 +191,11 @@ export const CreateTaskModal = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectLabel>Fruits</SelectLabel>
-                      <SelectItem value="apple">QT User module</SelectItem>
-                      <SelectItem value="banana">QT Task module </SelectItem>
+                      {modalData?.projects.map((proj) => (
+                        <SelectItem key={proj.id} value={proj.id}>
+                          {proj.name}
+                        </SelectItem>
+                      ))}
                     </SelectGroup>
                   </SelectContent>
                 </Select>

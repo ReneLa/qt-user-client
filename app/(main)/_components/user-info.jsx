@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
 
 import { Separator } from "@/components/ui/separator";
 
 const UserInfo = () => {
   const router = useRouter();
+  const { user } = useSelector(({ User }) => User);
   return (
     <div className="w-2/5 bg-[rgb(20,21,25)] max-h-1/2 flex flex-col border shadow-sm rounded-xl space-y-6 pb-4">
       <div className="relative  w-full h-[60px]">
@@ -29,15 +31,15 @@ const UserInfo = () => {
       </div>
       <div className="w-full flex-col items-center space-y-3-2  pt-6">
         <h4 className="text-base sm:text-xl md:text-xl font-medium text-center">
-          Rene La
+          {user?.first_name + user?.last_name || ""}
         </h4>
         <p className="text-[13px] font-regular text-neutral-300/50 text-center">
-          Software Developer @
+          {user?.title || ""}
         </p>
       </div>
       <div className="w-full flex-col items-center px-4">
         <p className="text-[13px] font-regular text-neutral-300/50 text-center">
-          {`I'd love to change the world, but they won’t give me the source code.`}
+          {user?.caption || ""}
         </p>
       </div>
       <div className="w-full px-4">

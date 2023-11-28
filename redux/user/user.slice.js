@@ -1,4 +1,45 @@
+import { createSlice } from "@reduxjs/toolkit";
 import { apiSlice } from "../api/api.slice";
+
+const initialState = {
+  user: null,
+  token: null
+};
+
+const userState = createSlice({
+  name: "user",
+  initialState,
+  reducers: {
+    save_token: (state, action) => {
+      state.token = action.payload;
+    },
+    updateCurrentUser: (state, action) => {
+      state.user = action.payload;
+    }
+  },
+  extraReducers: (builder) => {
+    builder.addMatcher(
+      apiSlice.endpoints.loginUser.matchFulfilled,
+      (state, { payload }) => {
+        state.token = payload.token;
+        state.user = payload.user;
+      }
+    ),
+      builder.addMatcher(
+        apiSlice.endpoints.registerUser.matchFulfilled,
+        (state, { payload }) => {
+          state.token = payload.token;
+          state.user = payload.user;
+        }
+      ),
+      builder.addMatcher(
+        apiSlice.endpoints.getUserInfo.matchFulfilled,
+        (state, { payload }) => {
+          state.user = payload.user;
+        }
+      );
+  }
+});
 
 export const userSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -25,13 +66,6 @@ export const userSlice = apiSlice.injectEndpoints({
         }
       })
     }),
-    modifyUser: builder.mutation({
-      query: (body) => ({
-        url: "/update-user",
-        method: "POST",
-        body
-      })
-    }),
     changePassword: builder.mutation({
       query: (body) => ({
         url: "/change-password",
@@ -41,8 +75,24 @@ export const userSlice = apiSlice.injectEndpoints({
     }),
     getUserInfo: builder.query({
       query: () => ({
-        url: `/user`,
+        url: `/api/user`,
         method: "GET"
+      })
+    }),
+    getAssignees: builder.query({
+      query: () => ({
+        url: `/api/user/all`,
+        method: "GET"
+      }),
+      transformResponse: (response) => {
+        return response.users;
+      }
+    }),
+    modifyUser: builder.mutation({
+      query: (data) => ({
+        url: `/api/user`,
+        method: "PATCH",
+        body: { ...data }
       })
     })
   })
@@ -54,5 +104,13 @@ export const {
   useResetPasswordMutation,
   useModifyUserMutation,
   useChangePasswordMutation,
-  useGetUserInfoQuery
+  useGetUserInfoQuery,
+  useGetAssigneesQuery
 } = userSlice;
+
+//selector for all users:assignees
+export const selectUsersData = (state) =>
+  userSlice.endpoints.getAssignees.select()(state)?.data;
+
+export const { save_token, updateCurrentUser } = userState.actions;
+export default userState.reducer;
