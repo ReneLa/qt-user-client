@@ -45,6 +45,7 @@ const LoginForm = () => {
   useEffect(() => {
     if (data && isSuccess) {
       router.replace("/tasks");
+      localStorage.setItem("auth", data.token);
       toast.success("Successful login");
     }
     if (isError && error) {

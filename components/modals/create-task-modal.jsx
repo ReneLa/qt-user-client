@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { addDays, format, getUnixTime } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,22 +40,15 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { onClose } from "@/redux/modal/modal.slice";
 import { DatePickerWithRange } from "../date-picker";
 import { cn } from "@/lib/utils";
+import { useCreateTaskMutation } from "@/redux/task/task.slice";
+import { Spinner } from "../spinner";
 
 const formSchema = z.object({
   name: z.string().min(1, {
     message: "Task name isn required"
   }),
-  start_date: z.string().min(1, {
-    message: "Start date is required"
-  }),
-  end_date: z.string().min(1, {
-    message: "End date is required"
-  }),
   description: z.string().min(1, {
     message: "Description is required"
-  }),
-  fileUrl: z.string().min(1, {
-    message: "File url is required"
   })
 });
 
@@ -62,6 +56,7 @@ export const CreateTaskModal = () => {
   const { isOpen, type, data: modalData } = useSelector(({ Modal }) => Modal);
   const router = useRouter();
   const dispatch = useDispatch();
+  const [createTask, { data, isLoading, isSuccess }] = useCreateTaskMutation();
 
   const isModalOpen = isOpen && type == "createTask";
 
@@ -71,54 +66,72 @@ export const CreateTaskModal = () => {
       name: "",
       start_date: "",
       end_date: "",
+      projectId: "",
       description: "",
-      fileUrl: ""
+      priority: "Normal"
     }
   });
 
   const [selectedAssignees, setSetSelectedAssignees] = useState([]);
+  const [date, setDate] = useState({
+    from: new Date(2022, 0, 20),
+    to: addDays(new Date(2022, 0, 20), 20)
+  });
 
-  //destruct to know when form is submitting
-  const isLoading = form.formState.isSubmitting;
-
-  const onSubmit = async (values) => {
-    try {
-      console.log(values);
-      // form.reset();
-      // router.refresh();
-      // dispatch(onClose());
-    } catch (error) {
-      console.log(error);
+  useEffect(() => {
+    if (isSuccess) {
+      handleClose();
+      toast.success("Task created");
     }
+  }, [isSuccess]);
+
+  const onSubmit = async () => {
+    const values = form.getValues();
+    const newTask = {
+      ...values,
+      start_date: date.from,
+      end_date: date.to,
+      assignees: JSON.stringify(selectedAssignees)
+    };
+
+    // console.log(newTask);
+    await createTask(newTask);
   };
 
   const handleClose = () => {
     form.reset();
+    setSetSelectedAssignees([]);
     dispatch(onClose());
   };
 
   const handleSelectAssignee = (id) => {
+    // console.log(id);
     const existAssignee = selectedAssignees?.find(
       (assignee) => assignee === id
     );
 
-    console.log(existAssignee, "assignee");
+    // console.log(existAssignee, "assignee");
     if (!existAssignee) {
-      setSetSelectedAssignees({ ...selectedAssignees, id });
+      setSetSelectedAssignees([...selectedAssignees, id]);
     } else {
+      const filtered = selectedAssignees.filter((ass) => {
+        return ass !== id;
+      });
+
+      setSetSelectedAssignees(filtered);
     }
   };
 
-  // const isSelected = (id) => {
-  //   const existAssignee = selectedAssignees?.find(
-  //     (assignee) => assignee === id
-  //   );
-  //   if (existAssignee) {
-  //     return true;
-  //   } else {
-  //     return false;
-  //   }
-  // };
+  const isSelected = (id) => {
+    const existAssignee = selectedAssignees?.find(
+      (assignee) => assignee === id
+    );
+    if (existAssignee) {
+      return true;
+    } else {
+      return false;
+    }
+  };
 
   const renderAssignees = () => {
     return modalData?.assignees?.map((assignee) => {
@@ -127,8 +140,8 @@ export const CreateTaskModal = () => {
           role="button"
           onClick={() => handleSelectAssignee(assignee.id)}
           className={cn(
-            "flex items-center justify-center py-1 px-2 rounded-md border cursor-pointer hover:bg-neutral-100/30 hover:shadow-lg"
-            // isSelected(assignee.id) && "bg-[red]"
+            "flex items-center justify-center py-1 px-2 rounded-md border cursor-pointer hover:bg-neutral-100/30 hover:shadow-lg",
+            isSelected(assignee.id) && "bg-[red]"
           )}
           key={assignee.id}
           style={{
@@ -147,6 +160,7 @@ export const CreateTaskModal = () => {
       );
     });
   };
+
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
       <DialogContent className="bg-[#191a1f] p-0 overflow-hidden">
@@ -157,7 +171,7 @@ export const CreateTaskModal = () => {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <div className="space-y-8">
             <div className="space-y-8 px-6">
               <FormField
                 control={form.control}
@@ -173,7 +187,7 @@ export const CreateTaskModal = () => {
               />
 
               <div className="flex items-center justify-between space-x-4">
-                <DatePickerWithRange />
+                <DatePickerWithRange setDate={setDate} date={date} />
               </div>
 
               <div className="flex flex-col space-y-2 ">
@@ -185,7 +199,7 @@ export const CreateTaskModal = () => {
 
               <div className="flex flex-col space-y-2 ">
                 Project
-                <Select>
+                <Select onValueChange={(e) => form.setValue("projectId", e)}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Select a project" />
                   </SelectTrigger>
@@ -220,30 +234,47 @@ export const CreateTaskModal = () => {
               <div className="flex flex-col space-y-2 ">
                 Priority
                 <RadioGroup
-                  defaultValue="comfortable"
+                  defaultValue="Normal"
+                  onValueChange={(e) => form.setValue("priority", e)}
                   className="flex flex-row items-center mt-2"
+                  on
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="default" id="r1" />
-                    <Label htmlFor="r1">Default</Label>
+                    <RadioGroupItem value="Low" id="r1" />
+                    <Label htmlFor="r1">Low</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="comfortable" id="r2" />
-                    <Label htmlFor="r2">Comfortable</Label>
+                    <RadioGroupItem value="Normal" id="r2" />
+                    <Label htmlFor="r2">Normal</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="compact" id="r3" />
-                    <Label htmlFor="r3">Compact</Label>
+                    <RadioGroupItem value="High" id="r3" />
+                    <Label htmlFor="r3">High</Label>
                   </div>
                 </RadioGroup>
               </div>
             </div>
-            <DialogFooter className="px-6 py-4">
-              <Button variant="primary" disabled={isLoading}>
-                Create
-              </Button>
+            <DialogFooter className="px-4 pb-4">
+              <div className=" w-full flex items-center justify-between ">
+                <div
+                  role="button"
+                  disabled={isLoading}
+                  onClick={handleClose}
+                  className="flex items-center justify-center py-1 w-1/3 bg-secondary rounded-md"
+                >
+                  Cancel
+                </div>
+                <div
+                  role="button"
+                  disabled={isLoading}
+                  onClick={form.handleSubmit(onSubmit)}
+                  className="flex justify-center items-center py-1 w-1/3 bg-primary rounded-md"
+                >
+                  {isLoading ? <Spinner size="sm" /> : "Submit"}
+                </div>
+              </div>
             </DialogFooter>
-          </form>
+          </div>
         </Form>
       </DialogContent>
     </Dialog>

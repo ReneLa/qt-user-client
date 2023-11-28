@@ -12,7 +12,7 @@ export const apiSlice = createApi({
       return headers;
     }
   }),
-  tagTypes: [],
+  tagTypes: ["Task"],
   endpoints: (builder) => ({}),
   refetchOnReconnect: true
 });

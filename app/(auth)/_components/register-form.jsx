@@ -57,6 +57,7 @@ const RegisterForm = () => {
     if (data && isSuccess) {
       router.replace("/profile");
       toast.success("Successful registered");
+      localStorage.setItem("auth", data.token);
     }
     if (isError && error) {
       const { message } = error.data;

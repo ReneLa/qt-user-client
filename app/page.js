@@ -1,34 +1,42 @@
 "use client";
 
 import { redirect } from "next/navigation";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
-import { useGetUserInfoQuery } from "@/redux/user/user.slice";
+import { save_token, useGetUserInfoQuery } from "@/redux/user/user.slice";
 
 import { Spinner } from "@/components/spinner";
+import { useEffect, useState } from "react";
+
 export default function Home() {
+  const dispatch = useDispatch();
   const { token } = useSelector(({ User }) => User);
-  const { data, isSuccess, isError, isLoading } = useGetUserInfoQuery();
+  // const { data, isSuccess, isError, isLoading } = useGetUserInfoQuery();
 
-  if (!token) {
-    return redirect("/signin");
-  }
+  const [isReady, setReady] = useState(false);
 
-  if (token && isLoading) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
+  const getUser = async () => {
+    const token = await localStorage.getItem("auth");
+    if (token) {
+      setReady(true);
+      dispatch(save_token(token));
+    }
+  };
+  useEffect(() => {
+    getUser();
+  }, []);
 
-  if (token && isError) {
-    return redirect("/signin");
-  }
+  // if (!token && !isReady) {
+  //   return <Spinner size="lg" />;
+  // }
 
-  if (isSuccess && data?.user) {
-    return redirect("/tasks");
-  }
+  // if (!token && isReady) {
+  //   return redirect("/signin");
+  // }
 
-  return null;
+  // if (token && isReady) {
+  //   return redirect("/tasks");
+  // }
+
+  return redirect("/signin");
 }

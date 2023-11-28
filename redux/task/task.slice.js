@@ -6,51 +6,47 @@ export const taskSlice = apiSlice.injectEndpoints({
       query: () => ({
         url: `/api/tasks`,
         method: "GET"
-      })
+      }),
+      transformResponse: (response) => {
+        return response.data;
+      },
+      providesTags: ["Task"]
     }),
     createTask: builder.mutation({
       query: (task) => ({
-        url: "/create-task",
+        url: "/api/tasks",
         method: "POST",
-        body: {
-          name: task.name,
-          start_date: task.start_date,
-          end_date: task.end_date,
-          assignee: task.assignee,
-          project: task.project,
-          description: task.description,
-          priority: task.priority,
-          file: task.file
-        }
-      })
+        body: { ...task }
+      }),
+      //this is to trigger a refetch whenever a new task is created
+      invalidatesTags: ["Task"]
     }),
     updateTask: builder.mutation({
-      query: (task) => ({
-        url: "/update-task",
-        method: "POST",
-        body: {
-          name: task.name,
-          start_date: task.start_date,
-          end_date: task.end_date,
-          assignee: task.assignee,
-          project: task.project,
-          description: task.description,
-          priority: task.priority,
-          file: task.file
-        }
-      })
+      query: (updatedTask) => ({
+        url: "/api/tasks/update-task",
+        method: "PATCH",
+        body: { ...updatedTask }
+      }),
+      //this is to trigger a refetch whenever a new task is updated
+      invalidatesTags: ["Task"]
     }),
     deleteTask: builder.mutation({
       query: (task) => ({
-        url: "/create-task",
+        url: "/api/tasks/delete-task",
         method: "DELETE",
         body: {
           id: task.id
         }
-      })
+      }),
+      //this is to trigger a refetch whenever a new task is deleted
+      invalidatesTags: ["Task"]
     })
   })
 });
+
+//selector for all tasks
+export const selectTasksData = (state) =>
+  taskSlice.endpoints.getTasks.select()(state)?.data;
 
 export const {
   useGetTasksQuery,

@@ -5,14 +5,19 @@ import { redirect } from "next/navigation";
 
 import Header from "./_components/header";
 import UserInfo from "./_components/user-info";
-import { useGetAssigneesQuery } from "@/redux/user/user.slice";
+import {
+  useGetAssigneesQuery,
+  useGetUserInfoQuery
+} from "@/redux/user/user.slice";
 import { useGetProjectsQuery } from "@/redux/project/project.slice";
+import { useGetTasksQuery } from "@/redux/task/task.slice";
 
 const MainLayout = ({ children }) => {
   const { token } = useSelector(({ User }) => User);
 
-  //prefetch assignees and projects
-
+  //prefetch assignees and projects and tasks
+  useGetUserInfoQuery();
+  useGetTasksQuery();
   useGetAssigneesQuery();
   useGetProjectsQuery();
 

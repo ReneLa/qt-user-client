@@ -3,10 +3,12 @@
 
 import Image from "next/image";
 import { useEffect } from "react";
+import { useSelector } from "react-redux";
 
 import { Separator } from "@/components/ui/separator";
-import { useGetTasksQuery } from "@/redux/task/task.slice";
+import { selectTasksData, useGetTasksQuery } from "@/redux/task/task.slice";
 import { Spinner } from "@/components/spinner";
+import { selectProjectsData } from "@/redux/project/project.slice";
 
 const TASKS = [
   {
@@ -92,27 +94,23 @@ const TASKS = [
   }
 ];
 const TaskList = () => {
-  const { data, isLoading } = useGetTasksQuery();
+  const tasks = useSelector(selectTasksData);
+  const projects = useSelector(selectProjectsData);
 
-  useEffect(() => {
-    if (data) {
-      console.log(data);
-    }
-  }, [data]);
+  console.log("tasks", tasks);
+
+  const project = (projectId) => {
+    return projects?.find((proj) => proj.id === projectId);
+  };
 
   return (
     <div className="mt-2 grid grid-cols-3 gap-4">
-      {isLoading && (
-        <div className="w-full h-full bg-[rgb(20,21,25)] max-h-1/2 flex flex-col border shadow-sm rounded-xl space-y-4 pb-2 items-center justify-center">
-          <Spinner size="md" />
-        </div>
-      )}
-      {!isLoading && data?.length === 0 && (
+      {tasks?.length === 0 && (
         <div className="w-full h-ful bg-[rgb(20,21,25)] max-h-1/2 flex flex-col border shadow-sm rounded-xl space-y-4 pb-2 items-center justify-center">
-          Create task
+          Create a task
         </div>
       )}
-      {data?.tasks?.map((task) => (
+      {tasks?.map((task) => (
         <div className="w-full bg-[rgb(20,21,25)] max-h-1/2 flex flex-col border shadow-sm rounded-xl space-y-4 pb-2">
           <div className="relative  w-full h-[60px]">
             <div className="absolute flex  -bottom-8 w-full left-0 right-0 z-10 items-center justify-center">
@@ -131,12 +129,12 @@ const TaskList = () => {
               {task.name}
             </h4>
             <p className="text-[13px] font-regular text-neutral-300/50 text-center">
-              {task.project.title}
+              {project(task.projectId).name}
             </p>
           </div>
           <div className="w-full flex-col items-center px-4">
-            <p className="text-[13px] font-regular text-neutral-300/50 text-center">
-              {`I'd love to change the world, but they won’t give me the source code.`}
+            <p className="text-[13px] font-regular text-neutral-300/50 text-center line-clamp-2">
+              {task.description}
             </p>
           </div>
           <Separator />
@@ -146,7 +144,7 @@ const TaskList = () => {
               className="text-sm font-regular text-center ml-1 text-[#0f6fec]"
               //   onClick={() => router.push("/profile")}
             >
-              View Settings
+              View Details
             </div>
           </div>
         </div>

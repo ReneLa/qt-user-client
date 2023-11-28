@@ -10,7 +10,7 @@ const UserInfo = () => {
   const router = useRouter();
   const { user } = useSelector(({ User }) => User);
   return (
-    <div className="w-2/5 bg-[rgb(20,21,25)] max-h-1/2 flex flex-col border shadow-sm rounded-xl space-y-6 pb-4">
+    <div className="w-2/5 h-2/4 bg-[rgb(20,21,25)] max-h-1/2 flex flex-col border shadow-sm rounded-xl space-y-6 pb-4">
       <div className="relative  w-full h-[60px]">
         <Image
           src="/wallpaper.jpg"
@@ -51,7 +51,7 @@ const UserInfo = () => {
           className="text-sm font-regular text-center ml-1 text-[#0f6fec]"
           onClick={() => router.push("/profile")}
         >
-          View Settings
+          Profile Settings
         </div>
       </div>
     </div>
